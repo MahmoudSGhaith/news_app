@@ -36,6 +36,10 @@ class _MainLayoutState extends State<MainLayout> {
       body: selectedCategoryModel == null
           ? HomeScreen(onButtonClicked: selectedCategoryChanged)
           : NewsScreen(categoryModel: selectedCategoryModel,),
+
+      // ? HomeScreen(onButtonClicked: selectedCategoryChanged)
+      //todo : if you want to use mvvm
+      // : MvvmNewsScreen(categoryModel: selectedCategoryModel,),
     );
   }
 
