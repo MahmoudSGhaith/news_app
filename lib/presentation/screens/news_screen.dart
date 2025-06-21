@@ -1,9 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+import 'package:news/app_manger/cubit/cubit_states.dart';
+import 'package:news/app_manger/cubit/home_cubit.dart';
 import 'package:news/app_manger/mvvm/mvvm_provider.dart';
 import 'package:news/core/colors_manger/colors_manger.dart';
 import 'package:news/extension/extensions.dart';
+import 'package:news/models/news_response/Articles.dart';
 import 'package:news/presentation/model/category_model.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -12,9 +16,9 @@ import '../../l10n/app_localizations.dart';
 
 class NewsScreen extends StatelessWidget {
   final CategoryModel? categoryModel;
+  final Articles? articles;
 
-  NewsScreen({super.key, required this.categoryModel});
-
+  NewsScreen({super.key, required this.categoryModel, this.articles});
 
   int selectedIndex = 0;
 
@@ -24,153 +28,181 @@ class NewsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     mvvmProvider = MvvmProvider()
       ..getSources(categoryModel?.id.toString() ?? "");
-    return ChangeNotifierProvider(
-      create: (context) => mvvmProvider,
-      builder: (context, child) {
-        return Consumer<MvvmProvider>(
-          builder: (context, provider, child) {
-            return Column(
-              children: [
-                SizedBox(height: context.heightQuery * 0.01),
-                DefaultTabController(
-                  length: provider.sourcesList.length,
-                  initialIndex: provider.selectedIndex,
-                  child: TabBar(
-                    onTap: provider.getNewsByNewSelectedTab,
-                    unselectedLabelColor: ColorsManger.grey.withAlpha(150),
-                    labelColor: Theme
+    return BlocProvider(
+      create: (context) =>
+      HomeCubit()
+        ..getSources(categoryModel?.id.toString() ?? ""),
+      child: Column(
+        children: [
+          BlocConsumer<HomeCubit, CubitStates>(
+            listener: (context, state) {
+              final cubit = context.read<HomeCubit>();
+              if (state is SourceSuccessState) {
+                cubit.getNews(state.sourcesList.first.id ?? "");
+              }
+            },
+            builder: (context, state) {
+              final cubit = context.read<HomeCubit>();
+              if (state is SourceSuccessState) {
+                return Column(
+                  children: [
+                    // todo : to show sources in tab bar
+                    DefaultTabController(
+                      initialIndex: cubit.selectedIndex,
+                      length: state.sourcesList.length,
+                      child: TabBar(
+                        onTap: (value) {
+                          cubit.changeNewsBySelectNewSource(
+                            value,
+                            state.sourcesList[value].id,
+                          );
+                        },
+                        labelColor: Theme
+                            .of(context)
+                            .hoverColor,
+                        unselectedLabelColor: Theme
+                            .of(context)
+                            .dividerColor,
+                        isScrollable: true,
+                        tabAlignment: TabAlignment.start,
+                        indicatorColor: Theme
+                            .of(context)
+                            .hoverColor,
+                        labelPadding: EdgeInsets.symmetric(
+                          horizontal: context.heightQuery * 0.01,
+                        ),
+                        dividerColor: ColorsManger.transparentColor,
+                        tabs: state.sourcesList!.map((e) {
+                          return Tab(text: e?.name ?? "");
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                );
+              }
+              else if (state is SourceErrorState) {
+                return Text("Error to load data");
+              }
+              else {
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: Theme
                         .of(context)
                         .hoverColor,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.heightQuery * 0.01,
-                    ),
-                    labelPadding: EdgeInsets.symmetric(
-                      horizontal: context.heightQuery * 0.01,
-                    ),
-                    indicatorColor: ColorsManger.transparentColor,
-                    tabAlignment: TabAlignment.start,
-                    isScrollable: true,
-                    dividerColor: Colors.transparent,
-                    tabs: provider.sourcesList.map((e) {
-                      return Tab(text: e.name ?? "");
-                    }).toList(),
                   ),
-                ),
-                SizedBox(height: context.heightQuery * 0.02),
-                if (mvvmProvider.isLoading)
-                  CircularProgressIndicator(color: Theme
-                      .of(context)
-                      .hoverColor)
-                else
-                  if (mvvmProvider.articlesList.isEmpty)
-                    Column(
-                      children: [
-                        Lottie.asset("assets/images/lottie.json"),
-                        Text(
-                          AppLocalizations.of(context)!.no_data_here,
-                          style: Theme
-                              .of(context)
-                              .textTheme
-                              .displayMedium,
-                        ),
-                      ],
-                    )
-                  else
-                    Expanded(
-                      child: ListView.separated(
-                        itemBuilder: (context, index) {
-                          return Container(
-                            margin: EdgeInsets.symmetric(
-                              horizontal: context.heightQuery * 0.01,
+                );
+              }
+            },
+            buildWhen: (previous, current) {
+              return current is SourceSuccessState ||
+                  current is SourceErrorState ||
+                  current is SourceLoadingState;
+            },
+            listenWhen: (previous, current) {
+              return current is SourceSuccessState ||
+                  current is SourceErrorState ||
+                  current is SourceLoadingState;
+            },
+          ),
+          SizedBox(height: context.heightQuery * 0.02),
+          BlocBuilder<HomeCubit, CubitStates>(
+            builder: (context, state) {
+              if (state is NewsSuccessState) {
+                return state.articlesList.isEmpty
+                    ? Column(
+                  children: [
+                    Lottie.asset("assets/images/lottie.json"),
+                    Text(
+                      AppLocalizations.of(context)!.no_data_here,
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .displayMedium,
+                    ),
+                  ],
+                )
+                    : Expanded(
+                  child: ListView.separated(
+                    itemBuilder: (context, index) {
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(context
+                            .heightQuery * 0.03),
+                        onTap: () {
+                          //todo : appear modal bottom sheet
+                          showArticleDetailsBottomSheet(context, articles);
+                        },
+                        child: Container(
+                          margin: EdgeInsets.symmetric(
+                            horizontal: context.heightQuery * 0.015,
+                          ),
+                          padding: EdgeInsets.all(
+                            context.heightQuery * 0.007,
+                          ),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme
+                                  .of(context)
+                                  .hoverColor,
                             ),
-                            padding: EdgeInsets.only(
-                              bottom: context.widthQuery * 0.015,
+                            borderRadius: BorderRadius.circular(
+                              context.heightQuery * 0.025,
                             ),
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(
-                                context.heightQuery * 0.02,
+                          ),
+                          child: Column(
+                            children: [
+                              //todo : articles image
+                              ClipRRect(
+                                borderRadius: BorderRadiusGeometry.circular(
+                                  context.heightQuery * 0.025,
+                                ),
+                                child: CachedNetworkImage(
+                                  fit: BoxFit.cover,
+                                  imageUrl:
+                                  state
+                                      .articlesList[index]
+                                      .urlToImage ??
+                                      "",
+                                  placeholder: (context, url) {
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        color: Theme
+                                            .of(context)
+                                            .hoverColor,
+                                      ),
+                                    );
+                                  },
+                                  errorWidget: (context, url, error) {
+                                    return Icon(
+                                      Icons.error,
+                                      color: Colors.red,
+                                      size: 30,
+                                    );
+                                  },
+                                ),
                               ),
-                              border: Border.all(
-                                color: Theme
-                                    .of(context)
-                                    .hoverColor,
+                              SizedBox(height: context.heightQuery * 0.01),
+                              //todo : articles text
+                              Text(
+                                state.articlesList[index].title ?? "",
+                                style: Theme
+                                    .of(
+                                  context,
+                                )
+                                    .textTheme
+                                    .displaySmall,
                               ),
-                            ),
-                            child: Column(
-                              children: [
-                                ClipRRect(
-                                  borderRadius:
-                                  BorderRadiusGeometry.circular(
-                                    context.heightQuery * 0.02,
-                                  ),
-                                  child: CachedNetworkImage(
-                                    fit: BoxFit.cover,
-                                    imageUrl:
-                                    mvvmProvider
-                                        .articlesList[index]
-                                        .urlToImage ??
-                                        "",
-                                    placeholder: (context, url) {
-                                      return Center(
-                                        child: CircularProgressIndicator(
-                                          color: Theme
-                                              .of(
-                                            context,
-                                          )
-                                              .hoverColor,
-                                        ),
-                                      );
-                                    },
-                                    errorWidget: (context, url, error) {
-                                      return Icon(
-                                        Icons.error,
-                                        color: Colors.red,
-                                        size: 30,
-                                      );
-                                    },
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: context.heightQuery * 0.015,
-                                ),
-                                Container(
-                                  margin: EdgeInsets.symmetric(
-                                    horizontal: context.heightQuery * 0.01,
-                                  ),
-                                  child: Text(
-                                    mvvmProvider
-                                        .articlesList[index]
-                                        .title ??
-                                        "",
-                                    style: Theme
-                                        .of(
-                                      context,
-                                    )
-                                        .textTheme
-                                        .displaySmall,
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: context.heightQuery * 0.015,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Container(
-                                        margin: EdgeInsets.symmetric(
-                                          horizontal:
-                                          context.heightQuery * 0.01,
-                                        ),
-                                        child: Container(
+                              SizedBox(height: context.heightQuery * 0.01),
+                              //todo : author name and articles publish date
+                              Row(
+                                children: [
+                                  //todo : author name
+                                  Expanded(
+                                    flex: 5,
                                           child: Text(
+                                            "By : ${state.articlesList[index]
+                                                .author ?? ""}",
                                             maxLines: 1,
-                                            "By : ${mvvmProvider
-                                                .articlesList[index].author ??
-                                                ""}",
                                             style: Theme
                                                 .of(
                                               context,
@@ -178,55 +210,65 @@ class NewsScreen extends StatelessWidget {
                                                 .textTheme
                                                 .labelMedium,
                                           ),
-                                        ),
-                                      ),
-                                    ),
-                                    Spacer(),
-                                    Expanded(
-                                      child: Text(
-                                        mvvmProvider
+                                  ),
+                                  Spacer(),
+                                  //todo : articles published date
+                                  Text(
+                                    timeago.format(
+                                      DateTime.parse(
+                                        state
                                             .articlesList[index]
-                                            .publishedAt !=
-                                            null
-                                            ? timeago.format(
-                                          DateTime.parse(
-                                            mvvmProvider
-                                                .articlesList[index]
-                                                .publishedAt!,
-                                          ),
-                                        )
-                                            : "Unknown time",
-                                        style: Theme
-                                            .of(
-                                          context,
-                                        )
-                                            .textTheme
-                                            .labelMedium,
+                                            .publishedAt ??
+                                            "",
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        separatorBuilder: (context, index) {
-                          return SizedBox(
-                            height: context.heightQuery * 0.01,
-                          );
-                        },
-                        itemCount: mvvmProvider.articlesList.length,
-                      ),
-                    )
-              ],
-            );
-          },
-        );
-      },
+                                    style: Theme
+                                        .of(
+                                      context,
+                                    )
+                                        .textTheme
+                                        .labelMedium,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    separatorBuilder: (context, index) {
+                      return SizedBox(height: context.heightQuery * 0.01);
+                    },
+                    itemCount: state.articlesList!.length,
+                  ),
+                );
+              }
+              else if (state is NewsErrorState) {
+                return Text("Error to load Data");
+              }
+              else {
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: Theme
+                        .of(context)
+                        .hoverColor,
+                  ),
+                );
+              }
+            },
+            buildWhen: (previous, current) {
+              return current is NewsSuccessState ||
+                  current is NewsErrorState ||
+                  current is NewsLoadingState;
+            },
+          ),
+        ],
+      ),
     );
   }
+
+  void showArticleDetailsBottomSheet(BuildContext context, Articles? articles) {
+
+  }
 }
-
-
-
 
