@@ -1,0 +1,21 @@
+{
+  "home": "الرئيسية",
+  "good_morning": "صباح الخير",
+  "good_after_noon" : "مساء الخير",
+  "good_night" : "ليله سعيده",
+  "here_is_some_news_for_you": "إليك بعض الأخبار لك",
+  "search": "بحث",
+  "news_app": "تطبيق الأخبار",
+  "go_to_home": "اذهب إلى الرئيسية",
+  "theme": "السمة",
+  "language": "اللغة",
+  "dark": "داكن",
+  "light": "فاتح",
+  "english": "الإنجليزية",
+  "arabic": "العربية",
+  "something_went_wrong" : "شيء ما حدث خطأ",
+  "try_again" : "حاول مجدداُ",
+  "view_all" : "اظهار الكل",
+  "no_data_here" : "لايوجد بيانات "
+}
+
