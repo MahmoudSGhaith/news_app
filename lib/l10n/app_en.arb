@@ -1,0 +1,20 @@
+{
+  "home" : "Home",
+  "good_morning" : "Good Morning",
+  "good_after_noon" : "Good AfterNoon",
+  "good_night" : "Good Night",
+  "here_is_some_news_for_you" : "Here is Some News For You",
+  "search" : "Search",
+  "news_app" : "News App",
+  "go_to_home" : "Go To Home",
+  "theme" : "Them",
+  "language" : "Language",
+  "dark" : "Dark",
+  "light" : "Light",
+  "english" : "English",
+  "arabic" : "Arabic",
+  "something_went_wrong" : "Something Went Wrong",
+  "try_again" : "Try Again",
+  "view_all" : "View All",
+  "no_data_here" : "No Data Here"
+}
