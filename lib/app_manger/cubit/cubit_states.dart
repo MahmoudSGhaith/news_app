@@ -21,7 +21,6 @@ class NewsLoadingState extends CubitStates {}
 
 class SourceSuccessState extends CubitStates {
   List<Sources> sourcesList;
-
   SourceSuccessState({required this.sourcesList});
 }
 

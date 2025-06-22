@@ -257,7 +257,8 @@ class NewsScreen extends StatelessWidget {
                 );
               } else if (state is NewsErrorState) {
                 return Text("Error to load Data");
-              } else {
+              }
+              else {
                 return Center(
                   child: CircularProgressIndicator(
                     color: Theme

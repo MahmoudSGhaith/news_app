@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:news/core/app_routes/app_routes.dart';
 import 'package:news/core/app_styles/app_styles.dart';
 import 'package:news/extension/extensions.dart';
 import 'package:news/l10n/app_localizations.dart';
@@ -16,6 +17,7 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   CategoryModel? selectedCategoryModel;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +28,17 @@ class _MainLayoutState extends State<MainLayout> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         actions: [
-          Icon(Icons.search, color: Theme.of(context).canvasColor, size: 30),
+          IconButton(
+            onPressed: () {
+              //todo: navigate to searchScreen
+              Navigator.pushNamed(context, AppRoutes.search);
+            },
+            icon: Icon(
+              Icons.search,
+              color: Theme.of(context).canvasColor,
+              size: 30,
+            ),
+          ),
         ],
       ),
       drawer: Drawer(
@@ -35,7 +47,7 @@ class _MainLayoutState extends State<MainLayout> {
       ),
       body: selectedCategoryModel == null
           ? HomeScreen(onButtonClicked: selectedCategoryChanged)
-          : NewsScreen(categoryModel: selectedCategoryModel,),
+          : NewsScreen(categoryModel: selectedCategoryModel),
 
       // ? HomeScreen(onButtonClicked: selectedCategoryChanged)
       //todo : if you want to use mvvm
