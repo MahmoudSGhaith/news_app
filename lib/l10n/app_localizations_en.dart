@@ -61,4 +61,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get no_data_here => 'No Data Here';
+
+  @override
+  String get view_full_article => 'View Full Article';
 }

@@ -61,4 +61,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get no_data_here => 'لايوجد بيانات ';
+
+  @override
+  String get view_full_article => 'عرض المقال كاملا';
 }

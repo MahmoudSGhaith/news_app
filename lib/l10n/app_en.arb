@@ -16,5 +16,6 @@
   "something_went_wrong" : "Something Went Wrong",
   "try_again" : "Try Again",
   "view_all" : "View All",
-  "no_data_here" : "No Data Here"
+  "no_data_here": "No Data Here",
+  "view_full_article": "View Full Article"
 }

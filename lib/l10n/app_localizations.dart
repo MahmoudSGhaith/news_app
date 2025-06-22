@@ -205,6 +205,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No Data Here'**
   String get no_data_here;
+
+  /// No description provided for @view_full_article.
+  ///
+  /// In en, this message translates to:
+  /// **'View Full Article'**
+  String get view_full_article;
 }
 
 class _AppLocalizationsDelegate

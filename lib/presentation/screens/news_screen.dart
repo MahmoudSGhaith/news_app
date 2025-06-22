@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -11,6 +14,7 @@ import 'package:news/models/news_response/Articles.dart';
 import 'package:news/presentation/model/category_model.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../l10n/app_localizations.dart';
 
@@ -79,11 +83,9 @@ class NewsScreen extends StatelessWidget {
                     ),
                   ],
                 );
-              }
-              else if (state is SourceErrorState) {
+              } else if (state is SourceErrorState) {
                 return Text("Error to load data");
-              }
-              else {
+              } else {
                 return Center(
                   child: CircularProgressIndicator(
                     color: Theme
@@ -125,11 +127,15 @@ class NewsScreen extends StatelessWidget {
                   child: ListView.separated(
                     itemBuilder: (context, index) {
                       return InkWell(
-                        borderRadius: BorderRadius.circular(context
-                            .heightQuery * 0.03),
+                        borderRadius: BorderRadius.circular(
+                          context.heightQuery * 0.03,
+                        ),
                         onTap: () {
                           //todo : appear modal bottom sheet
-                          showArticleDetailsBottomSheet(context, articles);
+                          showArticleDetailsBottomSheet(
+                            context,
+                            state.articlesList[index],
+                          );
                         },
                         child: Container(
                           margin: EdgeInsets.symmetric(
@@ -153,7 +159,8 @@ class NewsScreen extends StatelessWidget {
                             children: [
                               //todo : articles image
                               ClipRRect(
-                                borderRadius: BorderRadiusGeometry.circular(
+                                borderRadius:
+                                BorderRadiusGeometry.circular(
                                   context.heightQuery * 0.025,
                                 ),
                                 child: CachedNetworkImage(
@@ -167,7 +174,9 @@ class NewsScreen extends StatelessWidget {
                                     return Center(
                                       child: CircularProgressIndicator(
                                         color: Theme
-                                            .of(context)
+                                            .of(
+                                          context,
+                                        )
                                             .hoverColor,
                                       ),
                                     );
@@ -181,7 +190,9 @@ class NewsScreen extends StatelessWidget {
                                   },
                                 ),
                               ),
-                              SizedBox(height: context.heightQuery * 0.01),
+                              SizedBox(
+                                height: context.heightQuery * 0.01,
+                              ),
                               //todo : articles text
                               Text(
                                 state.articlesList[index].title ?? "",
@@ -192,7 +203,9 @@ class NewsScreen extends StatelessWidget {
                                     .textTheme
                                     .displaySmall,
                               ),
-                              SizedBox(height: context.heightQuery * 0.01),
+                              SizedBox(
+                                height: context.heightQuery * 0.01,
+                              ),
                               //todo : author name and articles publish date
                               Row(
                                 children: [
@@ -242,11 +255,9 @@ class NewsScreen extends StatelessWidget {
                     itemCount: state.articlesList!.length,
                   ),
                 );
-              }
-              else if (state is NewsErrorState) {
+              } else if (state is NewsErrorState) {
                 return Text("Error to load Data");
-              }
-              else {
+              } else {
                 return Center(
                   child: CircularProgressIndicator(
                     color: Theme
@@ -268,7 +279,78 @@ class NewsScreen extends StatelessWidget {
   }
 
   void showArticleDetailsBottomSheet(BuildContext context, Articles? articles) {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      builder: (context) {
+        return Container(
+          color: Theme
+              .of(context)
+              .hoverColor,
+          padding: EdgeInsets.all(context.heightQuery * 0.02),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadiusGeometry.all(Radius.circular(20)),
+                child: CachedNetworkImage(
+                  fit: BoxFit.cover,
+                  imageUrl: articles?.urlToImage ?? "",
+                  placeholder: (context, url) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: Theme
+                            .of(context)
+                            .hoverColor,
+                      ),
+                    );
+                  },
+                  errorWidget: (context, url, error) {
+                    return Icon(Icons.error, color: Colors.red, size: 30);
+                  },
+                ),
+              ),
+              SizedBox(height: context.heightQuery * 0.02,),
+              Text(
+                articles?.title ?? "",
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleSmall,
+              ),
+              SizedBox(height: context.heightQuery * 0.02,),
+              Container(
+                width: double.infinity,
+                height: context.heightQuery * 0.09,
+                child: CupertinoButton(
+                  color: Theme
+                      .of(context)
+                      .canvasColor,
+                  child: Text(
+                    AppLocalizations.of(context)!.view_full_article,
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .displaySmall,
+                  ),
+                  onPressed: () {
+                    log("By ${articles?.url ?? ""}");
+                    _launchUrl(articles?.url ?? "");
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
+  void _launchUrl(String url) async {
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      //todo : if true
+      await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+    }
   }
 }
-

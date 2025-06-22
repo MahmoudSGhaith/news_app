@@ -16,6 +16,7 @@
   "something_went_wrong" : "شيء ما حدث خطأ",
   "try_again" : "حاول مجدداُ",
   "view_all" : "اظهار الكل",
-  "no_data_here" : "لايوجد بيانات "
+  "no_data_here": "لايوجد بيانات ",
+  "view_full_article": "عرض المقال كاملا"
 }
 
