@@ -37,7 +37,8 @@ class _SearchViewState extends State<SearchView> {
       create: (context) =>
           SearchViewModelProvider(searchDataSource: SearchDataSourceImpl()),
       builder: (context, child) {
-        var searchProvider = Provider.of<SearchViewModelProvider>(context);
+        var searchProvider = Provider.of<SearchViewModelProvider>(
+            context, listen: false);
         return Scaffold(
           body: SafeArea(
             child: Column(
@@ -68,10 +69,13 @@ class _SearchViewState extends State<SearchView> {
                   ),
                   child: TextFormField(
                     onChanged: (value) {
-                      Provider.of<SearchViewModelProvider>(
-                        context,
-                        listen: false,
-                      ).search(value);
+                      if (value
+                          .trim()
+                          .isEmpty) {
+                        searchProvider.DeleteSearchArticles();
+                      } else {
+                        searchProvider.search(value);
+                      }
                     },
                     onTapOutside: (event) {
                       FocusScope.of(context).unfocus();
@@ -166,7 +170,9 @@ class _SearchViewState extends State<SearchView> {
                           ),
                         );
                       final articles = provider.searchResults?.articles;
-                      if (articles == null || articles.isEmpty) {
+                      if (searchController.text
+                          .trim()
+                          .isEmpty || articles == null || articles.isEmpty) {
                         return SingleChildScrollView(
                           child: Column(
                             children: [

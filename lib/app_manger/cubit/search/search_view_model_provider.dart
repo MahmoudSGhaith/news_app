@@ -24,4 +24,10 @@ class SearchViewModelProvider extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
+  void DeleteSearchArticles() {
+    searchResults = null;
+    errorMessage = "";
+    notifyListeners();
+  }
 }
